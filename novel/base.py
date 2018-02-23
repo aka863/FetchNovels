@@ -4,7 +4,6 @@
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
-import pypinyin
 from lxml.etree import XMLSyntaxError
 from pyquery import PyQuery
 from requests import ConnectionError
@@ -17,18 +16,15 @@ from novel.utils import Tool
 class BaseNovel(object):
 
     def __init__(self, url,
-                 headers=None, proxies=None,
+                 headers=None, 
                  encoding='UTF-8', tool=None,
-                 tid=None, cache=False):
+                 tid=None):
         self.url = url
         self._headers = headers or get_headers()
-        self._proxies = proxies
         self.encoding = encoding
         self.tool = tool or Tool
         self._tid = tid
-        self.cache = cache
 
-        self.running = False
         self.overwrite = True
         self.refine = self.doc = None
         self.title = self.author = ''
@@ -38,8 +34,8 @@ class BaseNovel(object):
         if self._tid is not None:
             return str(self._tid)
         else:
-            tp = pypinyin.slug(self.title, errors='ignore', separator='_')
-            ap = pypinyin.slug(self.author, errors='ignore', separator='_')
+            tp = self.title
+            ap = self.author
             tid = '{} {}'.format(tp, ap)
         return tid
 
@@ -57,11 +53,9 @@ class BaseNovel(object):
         return self.get_source_from_class()
 
     def run(self, refresh=False):
-        if self.running and not refresh:
-            return
         self.refine = self.tool().refine
         self.doc = self.get_doc()
-        self.running = True
+        #print(self.doc)
 
     def close(self):
         return
@@ -72,7 +66,7 @@ class BaseNovel(object):
     @retry((HTTPError, XMLSyntaxError, ConnectionError))
     def get_doc(self):
         return PyQuery(url=self.url, headers=self.headers,
-                       proxies=self.proxies, encoding=self.encoding)
+                       encoding=self.encoding)
 
     @property
     def headers(self):
@@ -81,14 +75,6 @@ class BaseNovel(object):
     @headers.setter
     def headers(self, value):
         self._headers = value or {}
-
-    @property
-    def proxies(self):
-        return self._proxies
-
-    @proxies.setter
-    def proxies(self, value):
-        self._proxies = value or {}
 
     def dump(self):
         raise NotImplementedError('dump')
@@ -102,10 +88,10 @@ class BaseNovel(object):
 class SinglePage(BaseNovel):
 
     def __init__(self, url, selector,
-                 headers=None, proxies=None,
+                 headers=None,
                  encoding='UTF-8', tool=None,
-                 tid=None, cache=False):
-        super().__init__(url, headers, proxies, encoding, tool, tid, cache)
+                 tid=None):
+        super().__init__(url, headers,  encoding, tool, tid)
         self.selector = selector
 
         self.content = ''
@@ -114,8 +100,6 @@ class SinglePage(BaseNovel):
         super().run(refresh=refresh)
         if not self.title:
             self.title = self.get_title()
-        if not self.cache:
-            self.content = self.get_content()
 
     def get_content(self):
         if not self.selector:

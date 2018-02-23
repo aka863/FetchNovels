@@ -10,13 +10,6 @@ import re
 import string
 from urllib.parse import urlparse, urlunparse, ParseResult
 
-import cardinality
-
-from novel.config import save_novel_list, load_novel_list
-from novel.db import create_session
-from novel.factory import add_novel
-from novel.models import Website
-
 
 class Tool(object):
     """
@@ -122,7 +115,7 @@ def fix_order(i):
 
 def get_field_count(format_string):
     fmt = string.Formatter()
-    return cardinality.count(t for t in fmt.parse(format_string) if t[1] is not None)
+    return len([t for t in fmt.parse(format_string) if t[1] is not None])
 
 
 def base_to_url(base_url, tid):
@@ -184,17 +177,3 @@ def get_filename(title, author=None, overwrite=True):
                     break
     return filename
 
-
-def sync_db_to_list():
-    with create_session() as session:
-        nl = {}
-        for w in session.query(Website).all():
-            nl[w.name] = [s.id for s in w.novels]
-    save_novel_list(nl)
-
-
-def sync_list_to_db():
-    nl = load_novel_list()
-    for s, tids in nl.items():
-        for tid in tids:
-            add_novel(s, tid)

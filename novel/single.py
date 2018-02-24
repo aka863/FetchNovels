@@ -27,7 +27,7 @@ class SingleNovel(SinglePage):
 
     def run(self, refresh=False):
         super().run(refresh=refresh)
-        print(self.title)
+        self.content = self.get_content()
 
     def get_title(self):
         if  not self.title_sel:
@@ -54,7 +54,6 @@ class SingleNovel(SinglePage):
 
     def dump(self):
         filename = get_filename(self.title, overwrite=self.overwrite)
-        print(filename)
         content = self.content
         with open(filename, 'w') as fp:
             fp.write(self.title)

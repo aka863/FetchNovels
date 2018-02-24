@@ -29,8 +29,29 @@ class Cool18(single.SingleNovel):
 
 
 if __name__ == '__main__':
-    cool18 = Cool18('14013617')
-    cool18.run()
-    print(cool18.get_content())
-    cool18.dump()
+    tids = []
+    with open("tids_cool18_to_dl") as f:
+        for line in f:
+            tid = line.strip() 
+            if tid != '':
+                tids.append(tid)
+    tids.sort()
+    titles  = []
+    contents = []
+    for tid in tids:
+        cool18 = Cool18(tid)
+        cool18.run()
+        title = cool18.get_title()
+        print(title)
+        titles.append(title)
+        contents.append(cool18.get_content())
+    filename = titles[-1] + '.txt'
+    print(filename)
+    with open('mhwa.txt', 'w') as fp:
+        for title,content in zip(titles,contents):
+            fp.write(title)
+            fp.write('\n\n\n\n')
+            fp.write(content)
+            fp.write('\n')
+        
 
